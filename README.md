@@ -1,10 +1,8 @@
-# card-maker
-
-> Helping you making personnalized cards for your [Clank!](https://www.direwolfdigital.com/clank/) game.
+# mama-card-maker
 
 _currently in developpement!_
 
-This project is designed to help you make new and personnalized _Clank!_ cards.
+This project is designed to make personnalized cards.
 
 This project is build using python 3 and the specific library streamlit.
 
