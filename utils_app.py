@@ -16,25 +16,27 @@ st.set_page_config(
 )
 
 libertine_font_20 = ImageFont.truetype(
-    "docs/font/LinuxLibertine/LinLibertine_RI.ttf", 20
+    "docs/font/LinLibertine_RI.ttf", 20
 )
 arimo_font_14 = ImageFont.truetype("docs/font/Arimo-BoldItalic.ttf", 14)
-arimo_font_45 = ImageFont.truetype("docs/font/Arimo-BoldItalic.ttf", 45)
 
-opensans_font_14 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 18)
+opensans_font_14 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 14)
+opensans_font_18 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 18)
 opensans_font_25 = ImageFont.truetype("docs/font/OpenSans-Bold.ttf", 25)
+opensans_font_25_i = ImageFont.truetype("docs/font/OpenSans-BoldItalic.ttf", 25)
 opensans_font_30 = ImageFont.truetype("docs/font/OpenSans-Bold.ttf", 32)
-
-comingsoon_font_45 = ImageFont.truetype("docs/font/ComingSoon-Regular.ttf", 45)
 
 offset = 80
 
 FONT_CARD_NAME = opensans_font_30
 FONT_CARD_TEXT = opensans_font_25
+FONT_CARD_TEXT_I = opensans_font_25_i
 FONT_CARD_QUOTE = libertine_font_20
-FONT_CARD_SUBTITLE = opensans_font_14
+FONT_CARD_SUBTITLE = opensans_font_18
 FONT_CARD_CATEGORY = arimo_font_14
 
+COPYRIGHT_TEXT = "©️2024 Momvembers"
+FONT_COPYRIGHT = opensans_font_14
 
 class Card:
     BASECARD = Image.open("docs/images/background/beige.png")
@@ -47,17 +49,16 @@ class Card:
     fond_couleur = "Brun"
     card_name = "Carte"
     subtitle_no = 0
+    type_bebe = ""
     subtitle_taille = 0
     subtitle_poids = 0
     card_category = "Novembabies"
+    date_naissance = "01/01"
     signe_astro = "Scorpion"
     value_skill = 0
     attaque_1_symbol = None
     attaque_1_text = ""
-    use_attaque_2 = False
-    attaque_2_symbol = None
-    attaque_2_text = ""
-    use_capacite_speciale = False
+    attaque_1_subtext = ""
     capacite_speciale_text = ""
     quote = ""
 
@@ -70,17 +71,16 @@ class Card:
             "fond_couleur": self.fond_couleur,
             "card_name": self.card_name,
             "subtitle_no": self.subtitle_no,
+            "type_bebe": self.type_bebe,
             "subtitle_taille": self.subtitle_taille,
             "subtitle_poids": self.subtitle_poids,
             "card_category": self.card_category,
+            "date_naissance": self.date_naissance,
             "signe_astro": self.signe_astro,
             "value_skill": self.value_skill,
             "attaque_1_symbol": self.attaque_1_symbol,
             "attaque_1_text": self.attaque_1_text,
-            "use_attaque_2": self.use_attaque_2,
-            "attaque_2_symbol": self.attaque_2_symbol,
-            "attaque_2_text": self.attaque_2_text,
-            "use_capacite_speciale": self.use_capacite_speciale,
+            "attaque_1_subtext": self.attaque_1_subtext,
             "capacite_speciale_text": self.capacite_speciale_text,
             "quote": self.quote,
         }
@@ -93,17 +93,16 @@ class Card:
         self.fond_couleur = data.get("fond_couleur")
         self.card_name = data.get("card_name")
         self.subtitle_no = data.get("subtitle_no")
+        self.type_bebe = data.get("type_bebe")
         self.subtitle_taille = data.get("subtitle_taille")
         self.subtitle_poids = data.get("subtitle_poids")
         self.card_category = data.get("card_category")
+        self.date_naissance = data.get("date_naissance")
         self.signe_astro = data.get("signe_astro")
         self.value_skill = data.get("value_skill")
         self.attaque_1_text = data.get("attaque_1_text")
+        self.attaque_1_subtext = data.get("attaque_1_subtext")
         self.attaque_1_symbol = data.get("attaque_1_symbol")
-        self.use_attaque_2 = data.get("use_attaque_2")
-        self.attaque_2_symbol = data.get("attaque_2_symbol")
-        self.attaque_2_text = data.get("attaque_2_text")
-        self.use_capacite_speciale = data.get("use_capacite_speciale")
         self.capacite_speciale_text = data.get("capacite_speciale_text")
         self.quote = data.get("quote")
 
@@ -151,8 +150,16 @@ def make_card(card_spec: Card):
     bandeau = Image.open(f"docs/images/bandeaux/Underbottom.png")
     card.paste(bandeau, (0, 6), bandeau)
 
-    subtitle = ""
+    draw.text(
+        (card_spec.WIDTH - 35, card_spec.HEIGHT - 35),
+        text=COPYRIGHT_TEXT,
+        fill="black",
+        font=FONT_COPYRIGHT,
+        anchor="rb",
+    )
+
     numero = f"N°{card_spec.subtitle_no :04d}  " if card_spec.subtitle_no > 0 else ""
+    type_bebe = card_spec.type_bebe if card_spec.type_bebe else card_spec.signe_astro
     taille = f"  Taille : {card_spec.subtitle_taille} cm" if card_spec.subtitle_taille > 0 else ""
     kg = card_spec.subtitle_poids // 1000
     gr = card_spec.subtitle_poids % 1000
@@ -161,32 +168,34 @@ def make_card(card_spec: Card):
 
     draw.text(
         (card_spec.WIDTH / 2, 558),
-        text=f"{numero}Bébé {card_spec.signe_astro.capitalize()}{taille}{poids}",
+        text=f"{numero}Bébé {type_bebe.capitalize()}{taille}{poids}",
         fill="black",
         font=FONT_CARD_SUBTITLE,
         anchor="mm",
     )
 
-    card_name = card_spec.card_name
-    draw.text(
-        (card_spec.WIDTH / 2, 60),
-        text=card_name,
-        fill="black",
-        font=FONT_CARD_NAME,
-        anchor="mm",
-    )
+    width = draw.textlength(card_spec.card_category, FONT_CARD_CATEGORY)
+    width = max(width, 40)
 
     card_category = Image.open(f"docs/images/bandeaux/{card_spec.card_category}.png")
     card.paste(card_category, (0, 0), card_category)
-    # width = draw.textlength(card_spec.card_category.upper(), FONT_CARD_CATEGORY)
-    # draw.rounded_rectangle((10, 42, 10+30+width, 42+26), fill="white", outline="black", width=2, radius=20)
-    # draw.text(
-    #     (25,42+13),
-    #     text=card_spec.card_category.upper(),
-    #     fill="black",
-    #     font=FONT_CARD_CATEGORY,
-    #     anchor="lm",
-    # )
+
+    card_name = card_spec.card_name
+    draw.text(
+        (width + 80, 53),
+        text=card_name,
+        fill="black",
+        font=FONT_CARD_NAME,
+        anchor="lm",
+    )
+
+    draw.text(
+        (card_spec.WIDTH-85, 56),
+        text=card_spec.date_naissance,
+        fill="black",
+        font=FONT_CARD_TEXT,
+        anchor="rm",
+    )
 
     signe_astro = Image.open(f"docs/images/signes_astro/{card_spec.signe_astro}.png")
     # card.paste(signe_astro, (549, 43), signe_astro)
@@ -197,47 +206,39 @@ def make_card(card_spec: Card):
     )
     # card.paste(attaque_1_symb, (-230, -66), attaque_1_symb)
     card.paste(attaque_1_symb, (50, 612), attaque_1_symb)
-
-
     attaque_1_text = card_spec.attaque_1_text
     draw.text(
-        (125, 635),
+        (120, 625),
         text=attaque_1_text,
         align="center",
         fill="black",
         font=FONT_CARD_TEXT,
         spacing=12,
-        anchor="lm"
+        anchor="lt"
     )
 
-    if card_spec.use_attaque_2:
-        scd_symb = Image.open(
-            f"docs/images/symbols/{card_spec.attaque_2_symbol}.png"
-        )
-        card.paste(scd_symb, (-230, 0), scd_symb)
+    attaque_1_subtext = card_spec.attaque_1_subtext
+    draw.text(
+        (120, 625+35),
+        text=attaque_1_subtext,
+        align="center",
+        fill="black",
+        font=FONT_CARD_SUBTITLE,
+        spacing=12,
+        anchor="lt"
+    )
 
-        attaque_2_text = card_spec.attaque_2_text
+    capacite_speciale_text = card_spec.capacite_speciale_text
+    if len(capacite_speciale_text)>0:
         draw.text(
-            (120, 702),
-            text=attaque_2_text,
-            align="left",
-            fill="black",
-            font=FONT_CARD_TEXT,
-            spacing=12,
-            anchor="lm"
-        )
-
-    if card_spec.use_capacite_speciale:
-        capacite_speciale_text = card_spec.capacite_speciale_text
-        draw.text(
-            (130, 702),
-            text=capacite_speciale_text,
-            align="center",
-            fill="black",
-            font=FONT_CARD_TEXT,
-            spacing=12,
-            anchor="lm"
-        )
+                (60, 725),
+                text=f"Capacité spéciale : {capacite_speciale_text}",
+                align="center",
+                fill="black",
+                font=FONT_CARD_TEXT_I,
+                spacing=12,
+                anchor="lm"
+            )
 
     quote = card_spec.quote
     draw.text(

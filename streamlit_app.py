@@ -13,15 +13,17 @@ card_spec.fond_couleur = st.sidebar.selectbox(
     "Couleur du fond", ("Beige", "Bleu", "Brun", "Gris", "Jaune", "Orange", "Vert", "Violet")
 ).lower()
 couleur = card_spec.fond_couleur
-card_spec.card_name = st.sidebar.text_input("Nom de la  carte", value="Nom de la Carte", label_visibility="collapsed")
 card_spec.card_category = st.sidebar.selectbox(
     "Catégorie de la carte", ("Novembabies", "Bliss"),
 ).lower()
+card_spec.card_name = st.sidebar.text_input("Nom de la  carte", value="Nom de la Carte", label_visibility="collapsed")
+card_spec.date_naissance = st.sidebar.text_input("Date de naissance", value="01/01", label_visibility="collapsed")
 card_spec.signe_astro = st.sidebar.selectbox(
     "Signe Astro", ("Vierge", "Balance", "Scorpion", "Sagittaire"),
 ).lower()
 
 card_spec.subtitle_no = st.sidebar.number_input("Numéro", min_value=0, max_value=None)
+card_spec.type_bebe = st.sidebar.text_input("Type du bébé", placeholder="Type du bébé", label_visibility="collapsed")
 card_spec.subtitle_taille = st.sidebar.number_input("Taille en cm", min_value=0, max_value=None)
 card_spec.subtitle_poids = st.sidebar.number_input("Poids en g", min_value=0, max_value=None)
 
@@ -39,23 +41,16 @@ card_spec.attaque_1_symbol = st.sidebar.selectbox("Symbole Attaque Principale", 
 card_spec.attaque_1_text = st.sidebar.text_input(
     "Texte Attaque Principale", value="Attaque Principale", label_visibility="collapsed",
 )
+card_spec.attaque_1_subtext = st.sidebar.text_input(
+    "Sous-Texte Attaque Principale", label_visibility="collapsed", placeholder="Description attaque 1"
+)
 
-card_spec.use_attaque_2 = st.sidebar.checkbox("Attaque Secondaire", value=False)
-if card_spec.use_attaque_2:
-    card_spec.attaque_2_symbol = st.sidebar.selectbox("Symbole Attaque Secondaire", symbols_1)
-    card_spec.attaque_2_text = st.sidebar.text_input(
-        "Texte Attaque Secondaire", value="Attaque Secondaire", label_visibility="collapsed",
-    )
-
-if not card_spec.use_attaque_2:
-    card_spec.use_capacite_speciale = st.sidebar.checkbox("Capacité Spéciale", value=False)
-if card_spec.use_capacite_speciale:
-    card_spec.capacite_speciale_text = st.sidebar.text_input(
-    "Texte Capacité Spéciale", value="Capacité Spéciale", label_visibility="collapsed",
+card_spec.capacite_speciale_text = st.sidebar.text_input(
+    "Texte Capacité Spéciale", placeholder="Capacité Spéciale", label_visibility="collapsed",
     )
 
 card_spec.quote = st.sidebar.text_area(
-    "Mini citation de la carte", value="Citation facultative", label_visibility="collapsed",
+    "Mini citation de la carte", placeholder="Citation facultative", label_visibility="collapsed",
 )
 
 tab1, tab2, tab3, tab4 = st.tabs(
