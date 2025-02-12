@@ -15,38 +15,44 @@ st.set_page_config(
     },
 )
 
-libertine_font_20 = ImageFont.truetype(
-    "docs/font/LinLibertine_RI.ttf", 20
-)
-arimo_font_14 = ImageFont.truetype("docs/font/Arimo-BoldItalic.ttf", 14)
+# libertine_RI_20 = ImageFont.truetype("docs/font/LinLibertine_RI.ttf", 20)
+arimo_BI_14 = ImageFont.truetype("docs/font/Arimo-BoldItalic.ttf", 14)
 
-opensans_font_14 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 14)
-opensans_font_18 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 18)
-opensans_font_25 = ImageFont.truetype("docs/font/OpenSans-Bold.ttf", 25)
-opensans_font_25_i = ImageFont.truetype("docs/font/OpenSans-BoldItalic.ttf", 25)
-opensans_font_30 = ImageFont.truetype("docs/font/OpenSans-Bold.ttf", 32)
+opensans_R_14 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 14)
+opensans_R_18 = ImageFont.truetype("docs/font/OpenSans-Regular.ttf", 18)
+opensans_BI_25 = ImageFont.truetype("docs/font/OpenSans-BoldItalic.ttf", 25)
+opensans_B_30 = ImageFont.truetype("docs/font/OpenSans-Bold.ttf", 32)
+
+athelas_R_15 = ImageFont.truetype("docs/font/Athelas-Regular.ttf", 15)
+athelas_I_20 = ImageFont.truetype("docs/font/Athelas-Italic.ttf", 20)
+athelas_R_25 = ImageFont.truetype("docs/font/Athelas-Regular.ttf", 25)
+athelas_B_32 = ImageFont.truetype("docs/font/Athelas-Bold.ttf", 32)
+athelas_BI_32 = ImageFont.truetype("docs/font/Athelas-BoldItalic.ttf", 32)
+athelas_R_32 = ImageFont.truetype("docs/font/Athelas-Regular.ttf", 32)
+athelas_B_36 = ImageFont.truetype("docs/font/Athelas-Bold.ttf", 36)
+
 
 offset = 80
 
-FONT_CARD_NAME = opensans_font_30
-FONT_CARD_TEXT = opensans_font_25
-FONT_CARD_TEXT_I = opensans_font_25_i
-FONT_CARD_QUOTE = libertine_font_20
-FONT_CARD_SUBTITLE = opensans_font_18
-FONT_CARD_CATEGORY = arimo_font_14
+FONT_CARD_NAME = athelas_B_36
+FONT_CARD_TEXT = athelas_B_32
+FONT_CARD_TEXT_I = athelas_BI_32
+# FONT_CARD_QUOTE = libertine_RI_20
+FONT_CARD_QUOTE = athelas_I_20
+FONT_CARD_SUBTITLE = opensans_R_18
+FONT_CARD_CATEGORY = arimo_BI_14
 
 COPYRIGHT_TEXT = "©️2024 Momvembers"
-FONT_COPYRIGHT = opensans_font_14
+FONT_COPYRIGHT = athelas_R_15
 
 class Card:
-    BASECARD = Image.open("docs/images/background/beige.png")
+    BASECARD = Image.open("docs/images/background.png")
     WIDTH, HEIGHT = BASECARD.size
 
     illustration_path = "docs/images/basic_illustration.PNG"
     size = 100
     horizon = 0
     vertical = 0
-    fond_couleur = "Brun"
     card_name = "Carte"
     subtitle_no = 0
     type_bebe = ""
@@ -56,9 +62,9 @@ class Card:
     date_naissance = "01/01"
     signe_astro = "Scorpion"
     value_skill = 0
-    attaque_1_symbol = None
-    attaque_1_text = ""
-    attaque_1_subtext = ""
+    attaque_symbol = None
+    attaque_text = ""
+    attaque_subtext = ""
     capacite_speciale_text = ""
     quote = ""
 
@@ -68,7 +74,6 @@ class Card:
             "size": self.size,
             "horizon": self.horizon,
             "vertical": self.vertical,
-            "fond_couleur": self.fond_couleur,
             "card_name": self.card_name,
             "subtitle_no": self.subtitle_no,
             "type_bebe": self.type_bebe,
@@ -78,9 +83,9 @@ class Card:
             "date_naissance": self.date_naissance,
             "signe_astro": self.signe_astro,
             "value_skill": self.value_skill,
-            "attaque_1_symbol": self.attaque_1_symbol,
-            "attaque_1_text": self.attaque_1_text,
-            "attaque_1_subtext": self.attaque_1_subtext,
+            "attaque_symbol": self.attaque_symbol,
+            "attaque_text": self.attaque_text,
+            "attaque_subtext": self.attaque_subtext,
             "capacite_speciale_text": self.capacite_speciale_text,
             "quote": self.quote,
         }
@@ -90,7 +95,6 @@ class Card:
         self.size = data.get("size")
         self.horizon = data.get("horizon")
         self.vertical = data.get("vertical")
-        self.fond_couleur = data.get("fond_couleur")
         self.card_name = data.get("card_name")
         self.subtitle_no = data.get("subtitle_no")
         self.type_bebe = data.get("type_bebe")
@@ -100,9 +104,9 @@ class Card:
         self.date_naissance = data.get("date_naissance")
         self.signe_astro = data.get("signe_astro")
         self.value_skill = data.get("value_skill")
-        self.attaque_1_text = data.get("attaque_1_text")
-        self.attaque_1_subtext = data.get("attaque_1_subtext")
-        self.attaque_1_symbol = data.get("attaque_1_symbol")
+        self.attaque_text = data.get("attaque_text")
+        self.attaque_subtext = data.get("attaque_subtext")
+        self.attaque_symbol = data.get("attaque_symbol")
         self.capacite_speciale_text = data.get("capacite_speciale_text")
         self.quote = data.get("quote")
 
@@ -144,12 +148,6 @@ def make_card(card_spec: Card):
     card.paste(resized_illustration, (-horizon + offset // 2, -vertical + offset // 2))
     card.paste(card_spec.BASECARD, (0, 0), card_spec.BASECARD)
 
-    fond_carte = Image.open(f"docs/images/background/{card_spec.fond_couleur}.png")
-    card.paste(fond_carte, (0, 0), fond_carte)
-
-    bandeau = Image.open(f"docs/images/bandeaux/Underbottom.png")
-    card.paste(bandeau, (0, 6), bandeau)
-
     draw.text(
         (card_spec.WIDTH - 35, card_spec.HEIGHT - 35),
         text=COPYRIGHT_TEXT,
@@ -169,7 +167,7 @@ def make_card(card_spec: Card):
     draw.text(
         (card_spec.WIDTH / 2, 558),
         text=f"{numero}Bébé {type_bebe.capitalize()}{taille}{poids}",
-        fill="black",
+        fill="#634038",
         font=FONT_CARD_SUBTITLE,
         anchor="mm",
     )
@@ -182,7 +180,7 @@ def make_card(card_spec: Card):
 
     card_name = card_spec.card_name
     draw.text(
-        (width + 80, 53),
+        (width + 80, 55),
         text=card_name,
         fill="black",
         font=FONT_CARD_NAME,
@@ -201,15 +199,15 @@ def make_card(card_spec: Card):
     # card.paste(signe_astro, (549, 43), signe_astro)
     card.paste(signe_astro, (254, -642), signe_astro)
 
-    attaque_1_symb = Image.open(
-        f"docs/images/symbols/{card_spec.attaque_1_symbol}.png"
+    attaque_symb = Image.open(
+        f"docs/images/attacks/{card_spec.attaque_symbol}.png"
     )
-    # card.paste(attaque_1_symb, (-230, -66), attaque_1_symb)
-    card.paste(attaque_1_symb, (50, 612), attaque_1_symb)
-    attaque_1_text = card_spec.attaque_1_text
+    # card.paste(attaque_symb, (-230, -66), attaque_symb)
+    card.paste(attaque_symb, (50, 612), attaque_symb)
+    attaque_text = card_spec.attaque_text
     draw.text(
         (120, 625),
-        text=attaque_1_text,
+        text=attaque_text,
         align="center",
         fill="black",
         font=FONT_CARD_TEXT,
@@ -217,10 +215,10 @@ def make_card(card_spec: Card):
         anchor="lt"
     )
 
-    attaque_1_subtext = card_spec.attaque_1_subtext
+    attaque_subtext = card_spec.attaque_subtext
     draw.text(
         (120, 625+35),
-        text=attaque_1_subtext,
+        text=attaque_subtext,
         align="center",
         fill="black",
         font=FONT_CARD_SUBTITLE,

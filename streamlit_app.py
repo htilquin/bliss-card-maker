@@ -9,10 +9,6 @@ st.markdown("Petit outil pour faire des cartes à jouer personnalisées - Novemb
 
 card_spec = Card()
 
-card_spec.fond_couleur = st.sidebar.selectbox(
-    "Couleur du fond", ("Beige", "Bleu", "Brun", "Gris", "Jaune", "Orange", "Vert", "Violet")
-).lower()
-couleur = card_spec.fond_couleur
 card_spec.card_category = st.sidebar.selectbox(
     "Catégorie de la carte", ("Novembabies", "Bliss"),
 ).lower()
@@ -37,12 +33,12 @@ symbols_1 = [
     "Rond2",
 ]
 
-card_spec.attaque_1_symbol = st.sidebar.selectbox("Symbole Attaque Principale", symbols_1)
-card_spec.attaque_1_text = st.sidebar.text_input(
-    "Texte Attaque Principale", value="Attaque Principale", label_visibility="collapsed",
+card_spec.attaque_symbol = st.sidebar.selectbox("Symbole Attaque", symbols_1)
+card_spec.attaque_text = st.sidebar.text_input(
+    "Texte Attaque", value="Attaque Principale", label_visibility="collapsed",
 )
-card_spec.attaque_1_subtext = st.sidebar.text_input(
-    "Sous-Texte Attaque Principale", label_visibility="collapsed", placeholder="Description attaque 1"
+card_spec.attaque_subtext = st.sidebar.text_input(
+    "Sous-Texte Attaque", label_visibility="collapsed", placeholder="Description attaque"
 )
 
 card_spec.capacite_speciale_text = st.sidebar.text_input(
