@@ -1,8 +1,7 @@
-import math
-import os
 import pandas as pd
 import streamlit as st
 
+from datetime import datetime
 from pathlib import Path
 from PIL import Image, ImageFont, ImageDraw
 from typing import List, Dict, Any
@@ -15,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="auto",
     menu_items={
         "About": """### Card Maker 
-    \nTemplate for cards for our family game.
+    \nTemplate for cards for fun !
     \n ---
     """
     },
@@ -54,7 +53,8 @@ illustration_width = X2 - X1
 illustration_height = Y2 - Y1
 
 class Card:
-    BASECARD = Image.open("docs/images/background.png")
+    BASECARD = Image.open("docs/images/background.png").convert("RGBA")
+    EXTENDED = Image.open("docs/images/Extended2.png").convert("RGBA") 
     WIDTH, HEIGHT = BASECARD.size
 
     illustration_path = "docs/images/basic_illustration.PNG"
@@ -72,7 +72,7 @@ class Card:
     attack_symbol = attack_symb[0]
     attack_text = ""
     attack_subtext = ""
-    capacite_speciale_text = ""
+    capacite_speciale = ""
     quote = ""
 
     def to_dict(self):
@@ -92,7 +92,7 @@ class Card:
             "attack_symbol": self.attack_symbol,
             "attack_text": self.attack_text,
             "attack_subtext": self.attack_subtext,
-            "capacite_speciale_text": self.capacite_speciale_text,
+            "capacite_speciale": self.capacite_speciale,
             "quote": self.quote,
         }
 
@@ -112,14 +112,13 @@ class Card:
         self.attack_text = data.get("attack_text")
         self.attack_subtext = data.get("attack_subtext")
         self.attack_symbol = data.get("attack_symbol")
-        self.capacite_speciale_text = data.get("capacite_speciale_text")
+        self.capacite_speciale = data.get("capacite_speciale")
         self.quote = data.get("quote")
 
 
 def csv_to_dict_list(uploaded_file) -> List[Dict[str, Any]]:
     """
-    cols = maman,name,date_naissance,signe_astro,numero,taille,poids,type_bebe,
-    attack_symbol,attack_text,attack_subtext,capacite_speciale,quote,category,zoom,horizon,vertical
+    cols = maman,name,date_naissance,signe_astro,numero,taille,poids,type_bebe,attack_symbol,attack_text,attack_subtext,capacite_speciale,quote,category,zoom,horizon,vertical
 
 
     Convert a CSV file from Streamlit's file uploader into a list of dictionaries,
@@ -144,24 +143,29 @@ def csv_to_dict_list(uploaded_file) -> List[Dict[str, Any]]:
     """
     try:
         # Read CSV file into a pandas DataFrame
-        df = pd.read_csv(uploaded_file)
+        df = pd.read_csv(
+            uploaded_file,
+            decimal=",",
+            converters={
+                "type_bebe": str.strip,
+                "quote": str.strip,
+                "capacite_speciale": str.strip,
+            },
+            )
         
         # Check if required columns exist
         if 'maman' in df.columns and 'name' in df.columns:
             # Create the combined column for sorting
-            df['illustration_path'] = df['maman'].astype(str) + '_' + df['name'].astype(str) + ".jpg"
+            df['illustration_path'] = df['maman'].astype(str) + '_' + df['name'].astype(str)
             
             df[["zoom"]] = df[["zoom"]].fillna(value=100).astype('int')
+            df[["taille"]] = df[["taille"]].fillna(value=0).astype(float)
+            df[["poids"]] = df[["poids"]].fillna(value=0).astype('int')
             df[["horizon", "vertical"]] = df[["horizon", "vertical"]].fillna(value=0).astype('int')
-            df[["type_bebe"]] = df[["type_bebe"]].fillna(value="")
-            df[["quote"]] = df[["quote"]].fillna(value="")
-            df[["attack_symbol"]] = df[["attack_symbol"]].fillna(value="Rond1")
+            df[["attack_symbol"]] = df[["attack_symbol"]].fillna(value="mignon").astype('str')
 
             # Sort DataFrame by the combined column
-            df = df.sort_values(by='illustration_path')
-            
-            # Remove the temporary sorting column
-            # df = df.drop('maman_prenom', axis=1)
+            df = df.sort_values(by='illustration_path', key=lambda col: col.str.normalize('NFKD'))
         else:
             missing_cols = []
             if 'maman' not in df.columns:
@@ -180,26 +184,27 @@ def csv_to_dict_list(uploaded_file) -> List[Dict[str, Any]]:
         return []
 
 
-def get_resized_dimensions(card_spec):
-    illustration = Image.open(card_spec.illustration_path)
+def get_resized_dimensions(card_spec, illustration):
+    # illustration = Image.open(card_spec.illustration_path)
     width, height = illustration.size
     ratio = height / width
+    zoom = card_spec.zoom if card_spec.zoom else 100
 
     if ratio > illustration_height / illustration_width :
         # largeur au moins de la largeur de la fenêtre
-        new_width = int(illustration_width / 100 * card_spec.zoom)
-        new_height = int(illustration_width / 100 * ratio * card_spec.zoom)
+        new_width = int(illustration_width / 100 * zoom)
+        new_height = int(illustration_width / 100 * ratio * zoom)
 
     else:
         # hauteur au moins de la hauteur de la fenêtre
-        new_height = int(illustration_height / 100 * card_spec.zoom)
-        new_width = int(illustration_height / 100 / ratio * card_spec.zoom)
+        new_height = int(illustration_height / 100 * zoom)
+        new_width = int(illustration_height / 100 / ratio * zoom)
 
     return new_width, new_height
 
 
 def resize_illustration(card_spec, illustration):
-    new_width, new_height = get_resized_dimensions(card_spec)
+    new_width, new_height = get_resized_dimensions(card_spec, illustration)
     resized_illustration = illustration.resize(
         (new_width, new_height),
         Image.LANCZOS,
@@ -237,18 +242,55 @@ def wrap_text(text, font, max_width, draw):
     return description
 
 
-def make_card(card_spec: Card, illustration):
-    card = card_spec.BASECARD.copy()
+def convert_to_date_format(value):
+    """
+    Tries to convert a string to a date.
+    If successful, returns the day and month as "DD/MM".
+    Otherwise, returns the original string.
+    """
+    # List of common date formats to try
+    date_formats = [
+        "%Y-%m-%d",    # 2023-01-15
+        "%d/%m/%Y",    # 15/01/2023
+        "%m/%d/%Y",    # 01/15/2023
+        "%d-%m-%Y",    # 15-01-2023
+        "%d.%m.%Y",    # 15.01.2023
+        "%Y/%m/%d"     # 2023/01/15
+    ]
+    
+    for fmt in date_formats:
+        try:
+            # Try to parse the string as a date
+            date_obj = datetime.strptime(value, fmt)
+            # Extract day and month as DD/MM
+            return date_obj.strftime("%d/%m")
+        except ValueError:
+            continue
+    
+    # If all conversions fail, return the original string
+    return value
+
+
+def make_card(card_spec: Card, illustration, bleed:bool=False):    
+    if bleed:
+        card_base = card_spec.EXTENDED
+        b = 30
+
+    else:
+        card_base = card_spec.BASECARD
+        b = 0
+    
+    card = card_base.copy()
     draw = ImageDraw.Draw(card)
 
     resized_illustration = resize_illustration(card_spec, illustration)
     horizon = card_spec.horizon
     vertical = card_spec.vertical
-    card.paste(resized_illustration, (X1 - horizon, Y1 - vertical))
-    card.paste(card_spec.BASECARD, (0, 0), card_spec.BASECARD)
+    card.paste(resized_illustration, (X1 - horizon + b, Y1 - vertical + b))
+    card.paste(card_base, (0, 0), card_base)
 
     draw.text(
-        (card_spec.WIDTH - 35, card_spec.HEIGHT - 35),
+        (card_spec.WIDTH - 55 + b, card_spec.HEIGHT - 35 + b),
         text=COPYRIGHT_TEXT,
         fill="black",
         font=FONT_COPYRIGHT,
@@ -257,15 +299,15 @@ def make_card(card_spec: Card, illustration):
 
     numero = f"N°{card_spec.numero :04d}  " if card_spec.numero > 0 else ""
     type_bebe = card_spec.type_bebe if card_spec.type_bebe else card_spec.signe_astro
-    taille = f"  Taille : {card_spec.taille} cm" if card_spec.taille > 0 else ""
+    taille = f"  Taille : {card_spec.taille:.2g} cm" if card_spec.taille > 0 else ""
     kg = card_spec.poids // 1000
     gr = card_spec.poids % 1000
     gr = f"{gr:03d}" if gr>0 else "0"
     poids = f"  Poids : {kg},{gr} kg" if card_spec.poids > 0 else ""
 
     draw.text(
-        (card_spec.WIDTH / 2, 558),
-        text=f"{numero}Bébé {type_bebe.capitalize()}{taille}{poids}",
+        (card_spec.WIDTH / 2  + b, 558 + b),
+        text=f"{numero}Bébé {type_bebe}{taille}{poids}",
         fill="#634038",
         font=FONT_CARD_SUBTITLE,
         anchor="mm",
@@ -275,11 +317,11 @@ def make_card(card_spec: Card, illustration):
     width = max(width, 40)
 
     category = Image.open(f"docs/images/bandeaux/{card_spec.category}.png")
-    card.paste(category, (0, 0), category)
+    card.paste(category, (b, b+5), category)
 
     name = card_spec.name
     draw.text(
-        (width + 80, 55),
+        (width + 80 + b, 55 + b+5),
         text=name,
         fill="black",
         font=FONT_NAME,
@@ -287,32 +329,32 @@ def make_card(card_spec: Card, illustration):
     )
 
     draw.text(
-        (card_spec.WIDTH-92, 56),
-        text=card_spec.date_naissance,
+        (card_spec.WIDTH-92 + b, 56 + b+5),
+        text=convert_to_date_format(card_spec.date_naissance),
         fill="black",
         font=FONT_CARD_TEXT,
         anchor="rm",
     )
 
     fond_signe_astro = Image.open(f"docs/images/signes_astro/astro_marron.png")
-    card.paste(fond_signe_astro, (0, 0), fond_signe_astro)
+    card.paste(fond_signe_astro, (b, b+5), fond_signe_astro)
 
     signe_astro = Image.open(f"docs/images/signes_astro/{card_spec.signe_astro.lower()}.png")
     signe_astro.thumbnail((32,32), Image.Resampling.LANCZOS)
-    card.paste(signe_astro, (549, 43), signe_astro)
+    card.paste(signe_astro, (549 + b, 43 + b+5), signe_astro)
 
     fond_attaque = Image.open("docs/images/attacks/rond_marron.png")
     fond_attaque.thumbnail((40,40), Image.Resampling.LANCZOS)
-    card.paste(fond_attaque, (58, 618), fond_attaque)
+    card.paste(fond_attaque, (58 + b, 618 + b), fond_attaque)
     
     attaque_symb = Image.open(
         f"docs/images/attacks/{card_spec.attack_symbol.lower()}.png"
     )
     attaque_symb.thumbnail((31,31), Image.Resampling.LANCZOS)
-    card.paste(attaque_symb, (63, 622), attaque_symb)
+    card.paste(attaque_symb, (63 + b, 622 + b), attaque_symb)
     attack_text = card_spec.attack_text
     draw.text(
-        (120, 625),
+        (120 + b, 625 + b),
         text=attack_text,
         align="center",
         fill="black",
@@ -321,10 +363,10 @@ def make_card(card_spec: Card, illustration):
         anchor="lt"
     )
 
-    attack_subtext = wrap_text(card_spec.attack_subtext, FONT_CARD_SUBTITLE, 470, draw)
+    attack_subtext = wrap_text(card_spec.attack_subtext, FONT_CARD_SUBTITLE, 460, draw)
 
     draw.multiline_text(
-        (120, 625+35),
+        (120 + b, 625+35 + b),
         text=attack_subtext,
         align="left",
         fill="black",
@@ -340,11 +382,11 @@ def make_card(card_spec: Card, illustration):
         )
     text_height = dimensions[3]-dimensions[1]
 
-    capacite_speciale_text = card_spec.capacite_speciale_text
-    if capacite_speciale_text and len(capacite_speciale_text)>0:
+    capacite_speciale = card_spec.capacite_speciale
+    if capacite_speciale and len(capacite_speciale)>0:
         draw.text(
-                (60, 700+text_height),
-                text=f"Capacité spéciale : {capacite_speciale_text}",
+                (60 + b, 700 + text_height + b),
+                text=f"Capacité spéciale : {capacite_speciale}",
                 align="center",
                 fill="black",
                 font=FONT_CARD_TEXT_I,
@@ -354,13 +396,14 @@ def make_card(card_spec: Card, illustration):
 
     quote = card_spec.quote
     draw.text(
-        (55, card_spec.HEIGHT - 80),
+        (55 + b, card_spec.HEIGHT - 80 + b),
         text=f"« {quote} »" if quote else "",
         # align="center",
         anchor="lm",
         fill="black",
         font=FONT_CARD_QUOTE,
     )
+
     return card
 
 

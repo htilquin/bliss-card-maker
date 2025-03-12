@@ -1,8 +1,9 @@
-import json
 import streamlit as st
-from utils_app import *
-from io import BytesIO
 import zipfile
+
+from utils_app import *
+from unidecode import unidecode
+from io import BytesIO
 
 st.markdown("## Novembabies Card Maker !")
 st.markdown("Petit outil pour faire des cartes à jouer personnalisées - Novembabies Edition.")
@@ -29,7 +30,7 @@ card_spec.attack_subtext = st.sidebar.text_input(
     "Sous-Texte Attaque", label_visibility="collapsed", placeholder="Description attaque"
 )
 
-card_spec.capacite_speciale_text = st.sidebar.text_input(
+card_spec.capacite_speciale = st.sidebar.text_input(
     "Texte Capacité Spéciale", placeholder="Capacité Spéciale", label_visibility="collapsed",
     )
 
@@ -54,8 +55,9 @@ with tab1:
             "Changer la taille de la photo", min_value=100, max_value=300, value=100
         )
 
-        new_width, new_heigth = get_resized_dimensions(card_spec)
-        if card_spec.zoom > 100:
+        illustration = Image.open(card_spec.illustration_path)
+        new_width, new_heigth = get_resized_dimensions(card_spec, illustration)
+        if new_width > illustration_width:
             card_spec.horizon = st.slider(
                 "Déplacer photo horizontalement",
                 min_value=0,
@@ -70,8 +72,9 @@ with tab1:
                 value=0,
             )
 
+    bleed = st.toggle("Ajouter bordure 3mm (bleed)")
     illustration = Image.open(card_spec.illustration_path)
-    card = make_card(card_spec, illustration)
+    card = make_card(card_spec, illustration, bleed)
     st.image(card, )
     buf = BytesIO()
     card.save(buf, format="PNG")
@@ -95,7 +98,9 @@ with tab2:
         accept_multiple_files=True,
     )
 
-    sorted_pics = sorted(uploaded_pics, key=lambda d: d.name)
+    bleed = st.toggle("Bordure 3mm (bleed)")
+
+    sorted_pics = sorted(uploaded_pics, key=lambda d: unidecode(d.name))
 
     if uploaded_spec and uploaded_pics:
         sorted_specs = csv_to_dict_list(uploaded_spec)
@@ -109,12 +114,12 @@ with tab2:
                     card_from_spec = Card()
                     card_from_spec.from_dict(specs)
                     illustration = Image.open(BytesIO(photo.read()))
-                    card_done = make_card(card_from_spec, illustration)
+                    card_done = make_card(card_from_spec, illustration, bleed)
                     buf = BytesIO()
-                    card_done.save(buf, format="PNG")
+                    card_done.save(buf, format="PNG", compress_level=0)
                     byte_im = buf.getvalue()
-                    # st.image(card_done)
-                    name = card_from_spec.illustration_path[:-4]
+                    st.image(card_done)
+                    name = card_from_spec.illustration_path
                     zipfile.writestr(f"{name}.png", byte_im)
 
             buffer.seek(0)
